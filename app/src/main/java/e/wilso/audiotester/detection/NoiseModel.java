@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NoiseModel {
-   private List<Double> RMS;
    private List<Double> RLH;
    private List<Double> VAR;
+   private List<Double> RMS;
 
    private int snore = 0;
    private int movement = 0;
@@ -112,7 +112,7 @@ public class NoiseModel {
       double var = 0;
 
       for(int i = 0; i < list.size(); i++) {
-         var += Math.pow(list.get(i) - mean,2);
+         var += Math.pow(list.get(i) - mean, 2);
       }
 
       return Math.sqrt(var / list.size());

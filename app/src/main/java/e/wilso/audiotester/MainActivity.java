@@ -5,19 +5,36 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Toast;
+
+import e.wilso.audiotester.modules.AudioView;
 
 public class MainActivity extends AppCompatActivity {
+
+   AudioView audioView;
 
    @Override
    protected void onCreate(@Nullable Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
-      setContentView(R.layout.activity_main);
+      //setContentView(R.layout.activity_main);
 
-      findViewById(R.id.start_test).setOnClickListener(new View.OnClickListener() {
-         @Override
-         public void onClick(View v) {
-            MainActivity.this.startActivity(new Intent(MainActivity.this, AudioTesters.class));
-         }
-      });
+      Toast.makeText(this, "onCreate", Toast.LENGTH_SHORT).show();
+
+      audioView = new AudioView(this);
+      setContentView(audioView);
+   }
+
+   @Override
+   protected void onResume() {
+      super.onResume();
+      //audioView = new AudioView(this);
+      //setContentView(audioView);
+      Toast.makeText(this, "onResume", Toast.LENGTH_SHORT).show();
+   }
+
+   @Override
+   protected void onPause() {
+      super.onPause();
+      Toast.makeText(this, "onPause", Toast.LENGTH_SHORT).show();
    }
 }

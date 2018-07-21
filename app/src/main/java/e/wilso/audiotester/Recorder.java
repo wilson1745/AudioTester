@@ -50,7 +50,7 @@ public class Recorder {
       lightRecorder.start(context);
 
       // Start the audio recorder
-      audioRecorder = new AudioRecorder(context, noiseModel,null);
+      audioRecorder = new AudioRecorder(noiseModel,null);
       audioRecorder.start();
 
       // Get the current data every 5 seconds

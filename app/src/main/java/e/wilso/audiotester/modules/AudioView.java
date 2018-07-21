@@ -63,7 +63,7 @@ public class AudioView extends View implements DebugView {
 
       noiseModel = new NoiseModel();
 
-      recorder = new AudioRecorder(getContext(), noiseModel,this);
+      recorder = new AudioRecorder(noiseModel,this);
       recorder.start();
    }
 
@@ -111,11 +111,13 @@ public class AudioView extends View implements DebugView {
 
    @Override
    protected void onDraw(Canvas canvas) {
+      // 設置背景顏色
+      setBackgroundColor(Color.BLACK);
       super.onDraw(canvas);
 
-      for(int i = 0;i<points2.size();i++) {
+      for(int i = 0; i < points2.size(); i++) {
          Double[] p = points2.get(i);
-         canvas.drawCircle((float)(500 + p[0]),(float)(500+p[1]), 2, paint);
+         canvas.drawCircle((float)(500 + p[0]),(float)(500 + p[1]), 2, paint);
       }
 
       if(points2.size() > 0) {
@@ -138,8 +140,8 @@ public class AudioView extends View implements DebugView {
          }
          canvas.drawText("Snore: " + snore, 100f, 500f, paint);
          canvas.drawText("Move: " + move, 100f, 600f, paint);
-         addRLH((curr[0]*20 + 900));
-         addVAR((curr[1]*20  + 900));
+         addRLH((curr[0] * 20 + 900));
+         addVAR((curr[1] * 20  + 900));
          addRMS((double) (lux * 20 + 900));
          drawPoints(canvas);
       }
