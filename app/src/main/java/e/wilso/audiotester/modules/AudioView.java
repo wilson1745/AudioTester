@@ -1,13 +1,17 @@
 package e.wilso.audiotester.modules;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import e.wilso.audiotester.detection.NoiseModel;
 import e.wilso.audiotester.interfaces.DebugView;
@@ -30,6 +34,12 @@ public class AudioView extends View implements DebugView {
    private AudioRecorder recorder;
    private NoiseModel noiseModel;
 
+   private SimpleDateFormat sdf;
+   private Date date;
+
+   long AverageTime = 0; // 計算平均處理時間使用
+   long StartTime = System.currentTimeMillis(); // 取出目前時間
+
    public AudioView(Context context) {
       super(context);
       init();
@@ -45,6 +55,7 @@ public class AudioView extends View implements DebugView {
       init();
    }
 
+   @SuppressLint("SimpleDateFormat")
    private void init(){
       paint = new Paint();
       paint.setColor(Color.BLACK);
@@ -60,6 +71,8 @@ public class AudioView extends View implements DebugView {
       RMS = new ArrayList<>();
 
       instance = this;
+
+      sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
       noiseModel = new NoiseModel();
 
@@ -121,13 +134,23 @@ public class AudioView extends View implements DebugView {
       }
 
       if(points2.size() > 0) {
+         long ProcessTime = System.currentTimeMillis() - StartTime; // 計算處理時間
+         //AverageTime += ProcessTime; // 累積計算時間
+         long FinalTime = ProcessTime / 1000;
+
+         date = new Date();
+         paint.setColor(Color.GREEN);
+         canvas.drawText("Date: " + sdf.format(date), 100f, 100f, paint);
+         paint.setColor(Color.MAGENTA);
+         canvas.drawText("Time: " + FinalTime, 100f, 200f, paint);
+
          Double[] curr = points2.get(points2.size() - 1);
          paint.setColor(Color.RED);
-         canvas.drawText("RLH: " + curr[0], 100f, 200f, paint);
+         canvas.drawText("RLH: " + curr[0], 100f, 300f, paint);
          paint.setColor(Color.YELLOW);
-         canvas.drawText("VAR: " + curr[1], 100f, 300f, paint);
+         canvas.drawText("VAR: " + curr[1], 100f, 400f, paint);
          paint.setColor(Color.BLUE);
-         canvas.drawText("RMS: " + lux, 100f, 400f, paint);
+         canvas.drawText("RMS: " + lux, 100f, 500f, paint);
          if(curr[1] > 1) { // Filter noise
             if(curr[0] > 2) {
                snore++;
@@ -138,8 +161,9 @@ public class AudioView extends View implements DebugView {
                }
             }
          }
-         canvas.drawText("Snore: " + snore, 100f, 500f, paint);
-         canvas.drawText("Move: " + move, 100f, 600f, paint);
+         paint.setColor(Color.WHITE);
+         canvas.drawText("Snore: " + snore, 100f, 600f, paint);
+         canvas.drawText("Active: " + move, 100f, 700f, paint);
          addRLH((curr[0] * 20 + 900));
          addVAR((curr[1] * 20  + 900));
          addRMS((double) (lux * 20 + 900));
