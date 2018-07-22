@@ -86,7 +86,8 @@ public class NoiseModel {
       if(getLastRLH() > 10) {
          if(getNormalizedVAR() > 2) {
             snore++;
-            Log.e("event","snore");
+            Log.e("event","snore" + ", getLastRLH(): " + getLastRLH() + ", getNormalizedVAR(): " + getNormalizedVAR());
+            Log.e("event","snore times: " + snore);
          }
       }
       else {
