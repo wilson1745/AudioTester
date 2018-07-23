@@ -22,7 +22,7 @@ import e.wilso.audiotester.detection.NoiseModel;
 import e.wilso.audiotester.interfaces.DebugView;
 import e.wilso.audiotester.recorders.AudioRecorder;
 
-public class AudioViewLayout extends AppCompatActivity implements DebugView/*, View.OnClickListener*/ {
+public class AudioViewLayout extends AppCompatActivity implements DebugView, View.OnClickListener {
 
    private static final int msgKey1 = 1;
 
@@ -43,10 +43,6 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
    private AudioRecorder recorder;
    private NoiseModel noiseModel;
 
-   private SimpleDateFormat sdf;
-   private Date date;
-
-   long AverageTime = 0; // 計算平均處理時間使用
    long StartTime = System.currentTimeMillis(); // 取出目前時間
 
    private TextView date_v, time_v, RLH_v, VAR_v, RMS_v, snore_v, active_v;
@@ -59,24 +55,7 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
       setContentView(R.layout.activity_audio_view_layout);
 
       init();
-
-      btn_play.setOnClickListener(new View.OnClickListener() {
-         @Override
-         public void onClick(View v) {
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer = MediaPlayer.create(AudioViewLayout.this, R.raw.snoring);
-            mediaPlayer.start();
-         }
-      });
-
-      btn_stop.setOnClickListener(new View.OnClickListener() {
-         @Override
-         public void onClick(View v) {
-            mediaPlayer.stop();
-            mediaPlayer.reset();
-         }
-      });
-
+      new SnoreThread().start();
       new TimeThread().start();
    }
 
@@ -92,6 +71,8 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
 
       btn_play = findViewById(R.id.btn_play);
       btn_stop = findViewById(R.id.btn_stop);
+      btn_play.setOnClickListener(this);
+      btn_stop.setOnClickListener(this);
 
       points = new ArrayList<>();
       points2 = new ArrayList<>();
@@ -101,8 +82,6 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
 
       //instance = this;
       instance = this;
-
-      sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
       noiseModel = new NoiseModel();
 
@@ -157,20 +136,21 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
       return false;
    }
 
-   /*@Override
+   @Override
    public void onClick(View view) {
-      switch (view.getId()) {
-         case R.id.btn_play:
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer = MediaPlayer.create(this, R.raw.snoring);
-            mediaPlayer.start();
-            break;
-         case R.id.btn_stop:
-            mediaPlayer.stop();
-            mediaPlayer.reset();
-            break;
+      int i = view.getId();
+
+      if(i == btn_play.getId()) {
+         mediaPlayer = new MediaPlayer();
+         mediaPlayer = MediaPlayer.create(this, R.raw.snoring);
+         mediaPlayer.start();
       }
-   }*/
+      else if(i == btn_stop.getId()) {
+         mediaPlayer.stop();
+         mediaPlayer.reset();
+         stopRecorder();
+      }
+   }
 
    public class TimeThread extends Thread {
       @Override
@@ -180,7 +160,7 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
                Thread.sleep(1000);
                Message msg = new Message();
                msg.what = msgKey1;
-               mHandler.sendMessage(msg);
+               timeHandler.sendMessage(msg);
             } catch (InterruptedException e) {
                e.printStackTrace();
             }
@@ -189,7 +169,44 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
    }
 
    @SuppressLint("HandlerLeak")
-   private Handler mHandler = new Handler() {
+   private Handler timeHandler = new Handler() {
+      @Override
+      public void handleMessage (Message msg) {
+         super.handleMessage(msg);
+         switch (msg.what) {
+            case msgKey1:
+               long sysTime = System.currentTimeMillis();
+               long ProcessTime = sysTime - StartTime; // 計算處理時間
+               long FinalTime = ProcessTime / 1000;   // 毫秒換算成秒
+
+               CharSequence sysTimeStr = DateFormat.format("yyyy-MM-dd hh:mm:ss", sysTime);
+               date_v.setText(sysTimeStr);
+               time_v.setText(String.valueOf(FinalTime));
+               break;
+            default:
+               break;
+         }
+      }
+   };
+
+   public class SnoreThread extends Thread {
+      @Override
+      public void run () {
+         do {
+            try {
+               Thread.sleep(100);
+               Message msg = new Message();
+               msg.what = msgKey1;
+               snoreHandler.sendMessage(msg);
+            } catch (InterruptedException e) {
+               e.printStackTrace();
+            }
+         } while(true);
+      }
+   }
+
+   @SuppressLint("HandlerLeak")
+   private Handler snoreHandler = new Handler() {
       @Override
       public void handleMessage (Message msg) {
          super.handleMessage(msg);
@@ -209,20 +226,13 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
       }
 
       if(points2.size() > 0) {
-         long sysTime = System.currentTimeMillis();
-         long ProcessTime = sysTime - StartTime; // 計算處理時間
-         long FinalTime = ProcessTime / 1000;
-         CharSequence sysTimeStr = DateFormat.format("yyyy-MM-dd hh:mm:ss", sysTime);
-         date_v.setText(sysTimeStr);
-         time_v.setText(String.valueOf(FinalTime));
-
          Double[] curr = points2.get(points2.size() - 1);
          RLH_v.setText(String.valueOf(curr[0]));
          VAR_v.setText(String.valueOf(curr[1]));
          RMS_v.setText(String.valueOf(lux));
 
          if(curr[1] > 1) { // Filter noise
-            if(curr[0] > 1.5) {
+            if(curr[0] > 2) {
                snore++;
             }
             else {
@@ -236,13 +246,11 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView/*, V
          addRLH((curr[0] * 20 + 900));
          addVAR((curr[1] * 20  + 900));
          addRMS((double) (lux * 20 + 900));
-
-
       }
       this.i++;
    }
 
-   public void stop() {
+   public void stopRecorder() {
       recorder.close();
    }
 }

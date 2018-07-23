@@ -22,8 +22,8 @@ public class FeatureExtractor {
    private double calculateRMS(short[] buffer) {
       long sum = 0;
 
-      for(int i=0;i<buffer.length;i++) {
-         sum += Math.pow(buffer[i],2);
+      for(int i = 0; i < buffer.length; i++) {
+         sum += Math.pow(buffer[i], 2);
       }
 
       return Math.sqrt(sum / buffer.length);
@@ -32,8 +32,8 @@ public class FeatureExtractor {
    private double calculateRMS(float[] buffer) {
       long sum = 0;
 
-      for(int i=0;i<buffer.length;i++) {
-         sum += Math.pow(buffer[i],2);
+      for(int i = 0; i < buffer.length; i++) {
+         sum += Math.pow(buffer[i], 2);
       }
 
       return Math.sqrt(sum / buffer.length);
@@ -43,8 +43,8 @@ public class FeatureExtractor {
       lowFreq[0] = 0;
       float a = 0.25f;
 
-      for(int i=1;i<buffer.length;i++) {
-         lowFreq[i] = lowFreq[i-1] + a * (buffer[i] - lowFreq[i-1]);
+      for(int i = 1; i < buffer.length; i++) {
+         lowFreq[i] = lowFreq[i-1] + a * (buffer[i] - lowFreq[i - 1]);
       }
 
       return calculateRMS(lowFreq);
@@ -54,8 +54,8 @@ public class FeatureExtractor {
       highFreq[0] = 0;
       float a = 0.25f;
 
-      for(int i=1;i<buffer.length;i++) {
-         highFreq[i] = a * (highFreq[i-1] + buffer[i] - buffer[i-1]);
+      for(int i = 1; i < buffer.length; i++) {
+         highFreq[i] = a * (highFreq[i - 1] + buffer[i] - buffer[i - 1]);
       }
 
       return calculateRMS(highFreq);
