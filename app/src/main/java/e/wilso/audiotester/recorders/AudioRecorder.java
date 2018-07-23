@@ -34,15 +34,15 @@ public class AudioRecorder extends Thread {
 
    @Override
    public void run() {
-
       capture();
    }
 
    private void capture() {
       int i = 0;
       android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+
       if(buffer == null) {
-         buffer  = new short[1600];
+         buffer = new short[1600];
       }
 
       if(N == 0 || (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED)) {
@@ -55,13 +55,13 @@ public class AudioRecorder extends Thread {
                  16000,
                  AudioFormat.CHANNEL_IN_MONO,
                  AudioFormat.ENCODING_PCM_16BIT,
-                 N);
+                 N
+         );
       }
       recorder.startRecording();
 
       while(!this.stopped) {
          N = recorder.read(buffer, 0, buffer.length);
-
          process(buffer);
       }
       recorder.stop();
@@ -72,8 +72,8 @@ public class AudioRecorder extends Thread {
       featureExtractor.update(buffer);
 
       if(debugView != null) {
-            /*debugView.addPoint2(noiseModel.getNormalizedRLH(), noiseModel.getNormalizedVAR());
-            debugView.setLux((float) (noiseModel.getNormalizedRMS()));*/
+         /*debugView.addPoint2(noiseModel.getNormalizedRLH(), noiseModel.getNormalizedVAR());
+         debugView.setLux((float) (noiseModel.getNormalizedRMS()));*/
          debugView.addPoint2(noiseModel.getLastRLH(), noiseModel.getNormalizedVAR());
          debugView.setLux((float) (noiseModel.getLastRMS()));
          debugView.post(new Runnable() {

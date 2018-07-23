@@ -57,7 +57,6 @@ public class LightRecorder {
       Sensor light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
       if(light != null) {
-
          // We already have an active sensorListener -> Remove it first and register a new one
          if(sensorListener != null) {
             sensorManager.unregisterListener(sensorListener);
@@ -77,7 +76,8 @@ public class LightRecorder {
          };
          return sensorManager.registerListener(sensorListener, light, SensorManager.SENSOR_DELAY_NORMAL);
 
-      } else {
+      }
+      else {
          return false;
       }
    }
@@ -97,7 +97,6 @@ public class LightRecorder {
     * @param context
     */
    public void stop(Context context) {
-
       // Make sure we don't have any filled variables hanging around
       this.currentLux = null;
 

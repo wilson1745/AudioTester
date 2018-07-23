@@ -3,6 +3,10 @@ package e.wilso.audiotester.modules;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Paint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Message;
@@ -21,6 +25,8 @@ import e.wilso.audiotester.R;
 import e.wilso.audiotester.detection.NoiseModel;
 import e.wilso.audiotester.interfaces.DebugView;
 import e.wilso.audiotester.recorders.AudioRecorder;
+
+import static android.hardware.Sensor.TYPE_LIGHT;
 
 public class AudioViewLayout extends AppCompatActivity implements DebugView, View.OnClickListener {
 
@@ -45,9 +51,12 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
 
    long StartTime = System.currentTimeMillis(); // 取出目前時間
 
-   private TextView date_v, time_v, RLH_v, VAR_v, RMS_v, snore_v, active_v;
-   private Button btn_play, btn_stop;
+   private TextView date_v, time_v, RLH_v, VAR_v, RMS_v, snore_v, active_v, sensor_v, lux_v;
+   private Button btn_play, btn_stop, btn_track_off;
    private MediaPlayer mediaPlayer;
+
+   private SensorManager sensor_manager;
+   private MySensorEventListener listener;
 
    @Override
    protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +64,13 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
       setContentView(R.layout.activity_audio_view_layout);
 
       init();
+
+      sensor_manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+      // Light傳感器
+      Sensor sensor = sensor_manager.getDefaultSensor(TYPE_LIGHT);
+      listener = new MySensorEventListener();
+      sensor_manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+
       new SnoreThread().start();
       new TimeThread().start();
    }
@@ -69,10 +85,15 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
       snore_v = findViewById(R.id.snore_view);
       active_v = findViewById(R.id.active_view);
 
+      sensor_v = findViewById(R.id.sensor_view);
+      lux_v = findViewById(R.id.lux_view);
+
       btn_play = findViewById(R.id.btn_play);
       btn_stop = findViewById(R.id.btn_stop);
       btn_play.setOnClickListener(this);
       btn_stop.setOnClickListener(this);
+      btn_track_off = findViewById(R.id.btn_track_off);
+      btn_track_off.setOnClickListener(this);
 
       points = new ArrayList<>();
       points2 = new ArrayList<>();
@@ -94,6 +115,7 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
       if(points2.size() > 10) {
          points2.remove(0);
       }
+
       Double[] p = new Double[2];
       p[0] = x;
       p[1] = y;
@@ -127,16 +149,6 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
    }
 
    @Override
-   public void invalidate() {
-
-   }
-
-   @Override
-   public boolean post(Runnable runnable) {
-      return false;
-   }
-
-   @Override
    public void onClick(View view) {
       int i = view.getId();
 
@@ -148,6 +160,8 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
       else if(i == btn_stop.getId()) {
          mediaPlayer.stop();
          mediaPlayer.reset();
+      }
+      else if(i == btn_track_off.getId()) {
          stopRecorder();
       }
    }
@@ -220,6 +234,30 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
       }
    };
 
+   // 感應器事件監聽器
+   private class MySensorEventListener implements SensorEventListener {
+      // 監控感應器改變
+      @Override
+      public void onSensorChanged(final SensorEvent event) {
+         runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+               // Android 的 Light Sensor 照度偵測內容只有 values[0] 有意義!
+               final float lux = event.values[0];
+
+               sensor_v.setText(event.sensor.getName());
+               lux_v.setText(String.valueOf(lux));
+            }
+         });
+      }
+
+      // 對感應器精度的改變做出回應
+      @Override
+      public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+      }
+   }
+
    private void StartTracking() {
       for(int i = 0; i < points2.size(); i++) {
          Double[] p = points2.get(i);
@@ -227,6 +265,7 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
 
       if(points2.size() > 0) {
          Double[] curr = points2.get(points2.size() - 1);
+
          RLH_v.setText(String.valueOf(curr[0]));
          VAR_v.setText(String.valueOf(curr[1]));
          RMS_v.setText(String.valueOf(lux));
@@ -253,5 +292,16 @@ public class AudioViewLayout extends AppCompatActivity implements DebugView, Vie
    public void stopRecorder() {
       recorder.close();
    }
+
+   @Override
+   public void invalidate() {
+
+   }
+
+   @Override
+   public boolean post(Runnable runnable) {
+      return false;
+   }
+
 }
 

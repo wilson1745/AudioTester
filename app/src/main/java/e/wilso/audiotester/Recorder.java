@@ -55,11 +55,9 @@ public class Recorder {
 
       // Get the current data every 5 seconds
       final android.os.Handler customHandler = new android.os.Handler();
-      Runnable updateTimerThread = new Runnable()
-      {
+      Runnable updateTimerThread = new Runnable() {
          public void run() {
             synchronized (Recorder.this) {
-
                if(lightRecorder == null || audioRecorder == null) {
                   // Recording already stopped. Do nothing here.
                   return;
